@@ -1,4 +1,4 @@
-import React,{ ChangeEvent, useState } from "react";
+import React,{ ChangeEvent, useEffect, useState } from "react";
 import type { DraftExpense, Value } from "../types";
 import { categories } from "../data/categories";
 import DatePicker from "react-date-picker";
@@ -19,7 +19,17 @@ export default function ExpenseForm() {
     })
     const [error, setError] = useState('');
 
-    const {dispatch} = useBudget()
+    const {dispatch, state} = useBudget()
+
+//Con este UseEffect lo que hacemos es identificar el expense que estamos modificando y llenar el formulario con sus datos
+//mediante el state
+    useEffect(()=>{
+      if(state.editingId){
+        const editingExpense = state.expenses.filter(currentExpense => currentExpense.id === state.editingId)
+        [0]
+        setExpense(editingExpense)
+      }
+    },[state.editingId])
 
     const handleChange = (e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement>) =>{
       const {name, value} = e.target;
@@ -48,7 +58,12 @@ export default function ExpenseForm() {
       }
 
       //Agregar un nuevo gasto
-      dispatch({type:'add-expense', payload:{expense}})
+      if(state.editingId){
+        dispatch({type:'update-expense', payload:{expense: {id:state.editingId, ...expense}}})
+      }else{
+        dispatch({type:'add-expense', payload:{expense}})
+      }
+      
 
       //Reiniciar el state
       setExpense({amount: 0,
@@ -60,7 +75,7 @@ export default function ExpenseForm() {
     
       <form className="space-y-5" onSubmit={handleSubmit}>
         <legend className="uppercase py-2 border-blue-500 text-center text-2xl font-black border-b-4">
-            Nuevo Gasto
+            {state.editingId ? 'Guardar Cambios':'Nuevo Gasto'}
             </legend>
 
             {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -135,7 +150,7 @@ export default function ExpenseForm() {
             <input
             type="submit"
             className="bg-blue-600 cursor-pointer w-full p-2 rounded-lg uppercase font-bold text-white"
-            value={'Registrar Gasto'}/>
+            value={state.editingId ? 'Guardar Cambios':'Registrar Gasto'}/>
       </form>
     
   )
