@@ -18,8 +18,9 @@ export default function ExpenseForm() {
         date: new Date ()
     })
     const [error, setError] = useState('');
+    const [previousAmount, setPreviousAmount] = useState(0);
 
-    const {dispatch, state} = useBudget()
+    const {dispatch, state, disponible} = useBudget()
 
 //Con este UseEffect lo que hacemos es identificar el expense que estamos modificando y llenar el formulario con sus datos
 //mediante el state
@@ -28,6 +29,7 @@ export default function ExpenseForm() {
         const editingExpense = state.expenses.filter(currentExpense => currentExpense.id === state.editingId)
         [0]
         setExpense(editingExpense)
+        setPreviousAmount(editingExpense.amount)
       }
     },[state.editingId])
 
@@ -57,6 +59,12 @@ export default function ExpenseForm() {
         return
       }
 
+       //Validación de que no me pase de presupuesto
+      if((expense.amount- previousAmount) > disponible){
+        setError('Presupuesto alcanzado')
+        return
+      }
+
       //Agregar un nuevo gasto
       if(state.editingId){
         dispatch({type:'update-expense', payload:{expense: {id:state.editingId, ...expense}}})
@@ -70,6 +78,8 @@ export default function ExpenseForm() {
         expenseName: '',
         category: '',
         date: new Date ()})
+
+        setPreviousAmount(0)
     }
   return (
     
